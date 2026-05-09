@@ -1,17 +1,17 @@
 # KẾ HOẠCH THỰC HIỆN ĐỀ TÀI
-
+---
 ## Tên đề tài
 Xây dựng hệ thống quản lý tài sản & thiết bị cho doanh nghiệp
-
+---
 ## Mục tiêu
 Xây dựng hệ thống quản lý tài sản và thiết bị nhằm hỗ trợ việc theo dõi và cập nhật dữ liệu trong doanh nghiệp
-
+---
 ## Công nghệ sử dụng
 - Java
 - NetBeans
 - SQL Server
 - GitHub
-
+---
 ## Kế hoạch thực hiện
 ### Tuần 1
 - Tìm hiểu yêu cầu đề tài
