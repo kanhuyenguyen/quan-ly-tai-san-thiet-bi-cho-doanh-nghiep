@@ -108,7 +108,7 @@ Cho phép gửi báo cáo tình trạng thiết bị cho admin
 ![Biểu đồ lớp](https://raw.githubusercontent.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/main/Images/ClassDiagram1.png)
 
 ### 6.3 Activity Diagram
-![Biểu đồ hoạt động](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/blob/d33c40320008819f170823995d20f624c929a28b/Images/ActivityDiagram1.png)
+![Biểu đồ hoạt động](Images/ActivityDiagram1.png)
 
 ### 6.4 Sequence Diagram
 
