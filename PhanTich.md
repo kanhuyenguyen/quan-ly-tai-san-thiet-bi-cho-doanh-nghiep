@@ -37,13 +37,14 @@ Xây dựng hệ thống quản lý tài sản và thiết bị bằng Python Fl
 ---
 
 ## 3. Kiến trúc hệ thống
-Hệ thống được xây dựng theo mô hình Client – Server – Database.
-- Client: giao diện người dùng được xây dựng bằng HTML, CSS, JavaScript
-- Server: backend xử lý dữ liệu bằng Python Flask
-- Database: SQL Server dùng để lưu trữ dữ liệu hệ thống
-Luồng hoạt động:
-Client gửi request → Flask xử lý → SQL Server lưu/truy xuất dữ liệu → trả kết quả về giao diện
+- Hệ thống được xây dựng theo mô hình Client – Server – Database.
+  - Client: giao diện người dùng được xây dựng bằng HTML, CSS, JavaScript
+  - Server: backend xử lý dữ liệu bằng Python Flask
+  - Database: SQL Server dùng để lưu trữ dữ liệu hệ thống
+  
+![Biểu Use Case](Images/Client–Server.png)
 
+- Luồng hoạt động: Client gửi request → Flask xử lý → SQL Server lưu/truy xuất dữ liệu → trả kết quả về giao diện
 ---
 
 ## 4. Đối tượng sử dụng hệ thống
@@ -77,8 +78,9 @@ Cho phép admin đăng nhập để sử dụng các chức năng quản lý
 - Thêm thiết bị
 - Sửa thông tin thiết bị
 - Xóa thiết bị
+- Xem danh sách thiết bị
 - Cập nhật trạng thái thiết bị
-### Phân bổ thiết bị & tài sản
+#### Phân bổ thiết bị & tài sản
 - Bàn giao thiết bị cho phòng ban hoặc nhân viên
 - Cập nhật thông tin người sử dụng thiết bị
 - Theo dõi thiết bị đang sử dụng hoặc chưa sử dụng
@@ -87,7 +89,7 @@ Cho phép tìm kiếm tài sản và thiết bị theo tên hoặc trạng thái
 
 ---
 
-### 5.2 Chức năng của User
+### 5.2 Chức năng của Nhân viên
 #### Đăng nhập hệ thống
 Cho phép nhân viên đăng nhập vào hệ thống
 #### Xem thông tin
@@ -97,21 +99,30 @@ Cho phép tìm kiếm thông tin cần thiết.
 ### Xem thiết bị được phân bổ
 Cho phép nhân viên xem thông tin thiết bị được bàn giao
 #### Gửi yêu cầu / báo cáo
-Cho phép gửi báo cáo tình trạng thiết bị cho admin
+- Cho phép gửi báo cáo tình trạng thiết bị cho admin
+- Cho phép gửi yêu cầu mượn, sử dụng tài sản và thiết bị công ty
 
 ---
 
 ### 6.1 Use Case Diagram
-![Biểu Use Case](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/blob/main/Images/UseCaseTongQuan.png?raw=true)
+![Biểu Use Case](Images/UseCaseTongQuan.png)
 
 ### 6.2 Class Diagram
-![Biểu đồ lớp](https://raw.githubusercontent.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/main/Images/ClassDiagram1.png)
+![Biểu đồ lớp](Images/ClassDiagram1.png)
 
 ### 6.3 Activity Diagram
 ![Biểu đồ hoạt động](Images/ActivityDiagram1.png)
 
 ### 6.4 Sequence Diagram
-
+- Đăng nhập
+![Biểu đồ tuần tự phía nhân viên](Images/SQDangNhap.png)
+![Biểu đồ tuần tự đăng nhập phía admin](Images/SQDangNhap2.png)
+- Nhân viên gửi yêu cầu / báo cáo
+![Biểu đồ tuần tự yêu cầu, báo cáo](Images/YeuCauVaBaoCao.png)
+- Admin quản lý tài sản và thiết bị
+![Biểu đò tuần tự quản lý tài sản và thiết bị](Images/QuanLyTaiSanVaThietBi.png)
+- Admin phân bổ thiết bị & tài sản
+![Biểu đò tuần tự bàn giao](Images/Bangiao.png)
 ## 7. Thiết kế cơ sở dữ liệu
 ### Bảng Người dùng 
 - Mã người dùng
