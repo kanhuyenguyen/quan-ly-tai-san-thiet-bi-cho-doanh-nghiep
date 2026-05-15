@@ -103,9 +103,9 @@ Cho phép gửi báo cáo tình trạng thiết bị cho admin
 
 ## 6. Phân tích và thiết kế hệ thống
 ### 6.1 Use Case Diagram
-![Biểu đồ Use Case](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/raw/main/Images/UseCase%20T%E1%BB%95ng%20Quan.png)
+![Biểu đồ Use Case](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/blob/main/Images/UseCase%20T%E1%BB%95ng%20Quan.png)
 ### 6.2 Class Diagram
-![Biểu đồ lớp](./Images/ClassDiagram1.png)
+![Biểu đồ lớp](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/blob/main/Images/ActivityDiagram1.png)
 ### 6.3 Activity Diagram
 ![Biểu đồ hoạt động](./Images/ActivityDiagram1.png)
 ### 6.4 Sequence Diagram
