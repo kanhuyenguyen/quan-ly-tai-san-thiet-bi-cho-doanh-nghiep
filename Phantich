@@ -102,8 +102,8 @@ Cho phép gửi báo cáo tình trạng thiết bị cho admin
 ---
 
 ### 6.1 Use Case Diagram
-![Biểu Use Case](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/blob/main/Images/UseCaseTongQuan.png)
 ![Biểu Use Case](https://github.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/blob/main/Images/UseCaseTongQuan.png?raw=true)
+
 ### 6.2 Class Diagram
 ![Biểu đồ lớp](https://raw.githubusercontent.com/kanhuyenguyen/quan-ly-tai-san-thiet-bi-cho-doanh-nghiep/main/Images/ClassDiagram1.png)
 
