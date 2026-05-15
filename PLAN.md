@@ -15,6 +15,7 @@ Hệ thống cho phép người dùng:
   + Quản lý thông tin tài sản và thiết bị
   + Thêm, sửa và xóa dữ liệu
   + Theo dõi tình trạng tài sản và thiết bị
+  + Phân bố / bàn giao thiết bị & tài sản
   + Tìm kiếm thông tin 
   + Quản lý dữ liệu 
 - user(nhân viên)
@@ -25,7 +26,7 @@ Hệ thống cho phép người dùng:
 ---
 ## Yêu cầu hệ thống
 ### Yêu cầu chức năng
-- Đăng nhập / phân quyền người dùng (Admin / User)
+- Đăng nhập / phân quyền người dùng (Admin / Nhân viên)
 - Thêm / Sửa / Xóa tài sản
 - Thêm / Sửa / Xóa thiết bị
 - Tìm kiếm tài sản và thiết bị
@@ -49,7 +50,7 @@ Hệ thống cho phép người dùng:
 #### Nội dung cần thực hiện:
 - Tìm hiểu yêu cầu đề tài
 - Khảo sát + Xác định chức năng hệ thống
-- Phân tích đối tượng sử dụng (Admin / User)
+- Phân tích đối tượng sử dụng (Admin / Nhân viên)
 - Tạo repository trên GitHub
 - Xây dựng Use Case cơ 
 - Thiết kế cơ sở dữ liệu ban đầu
