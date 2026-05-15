@@ -1,0 +1,156 @@
+#Phân tích chi tiết
+
+## 1. Giới thiệu đề tài
+
+### 1.1 Lý do chọn đề tài
+### 1.1 Lý do chọn đề tài
+Trong quá trình quản lý tài sản và thiết bị, doanh nghiệp cần theo dõi nhiều thông tin khác nhau như tình trạng thiết bị, dữ liệu tài sản và quá trình cập nhật thông tin. Vì vậy, việc xây dựng hệ thống quản lý sẽ giúp hỗ trợ quản lý dữ liệu nhanh chóng và dễ dàng hơn.
+### 1.2 Bài toán đặt ra
+Doanh nghiệp cần một hệ thống hỗ trợ:
+- Quản lý tài sản và thiết bị
+- Theo dõi tình trạng thiết bị
+- Tìm kiếm thông tin nhanh chóng
+- Hỗ trợ cập nhật dữ liệu dễ dàng
+### 1.3 Giải pháp đề xuất
+Xây dựng hệ thống quản lý tài sản và thiết bị bằng Python Flask kết hợp SQL Server nhằm hỗ trợ quản lý dữ liệu và tối ưu quá trình theo dõi thiết bị trong doanh nghiệp.
+#### Công nghệ sử dụng
+- Frontend: HTML, CSS, JavaScript
+- Backend: Python Flask
+- Database: SQL Server
+- Công cụ: Visual Studio Code, GitHub
+#### Lý do lựa chọn công nghệ
+- Python Flask: đơn giản, dễ xây dựng hệ thống web và phù hợp với quy mô đề tài
+- SQL Server: hỗ trợ lưu trữ và quản lý dữ liệu tốt
+- HTML/CSS/JavaScript: xây dựng giao diện web cơ bản
+- Visual Studio Code: dễ sử dụng và hỗ trợ nhiều extension
+- GitHub: hỗ trợ quản lý source code và lưu trữ tài liệu
+
+---
+
+## 2. Mục tiêu hệ thống
+- Quản lý thông tin tài sản và thiết bị
+- Hỗ trợ tìm kiếm dữ liệu nhanh chóng
+- Theo dõi tình trạng thiết bị
+- Hỗ trợ phân quyền người dùng
+- Giúp quản lý dữ liệu hiệu quả hơn
+
+---
+
+## 3. Kiến trúc hệ thống
+Hệ thống được xây dựng theo mô hình Client – Server – Database.
+- Client: giao diện người dùng được xây dựng bằng HTML, CSS, JavaScript
+- Server: backend xử lý dữ liệu bằng Python Flask
+- Database: SQL Server dùng để lưu trữ dữ liệu hệ thống
+Luồng hoạt động:
+Client gửi request → Flask xử lý → SQL Server lưu/truy xuất dữ liệu → trả kết quả về giao diện
+
+---
+
+## 4. Đối tượng sử dụng hệ thống
+
+### 4.1 Admin
+- Quản lý tài sản và thiết bị
+- Thêm / sửa / xóa dữ liệu
+- Theo dõi tình trạng thiết bị
+- Cập nhật trạng thái sử dụng thiết bị
+- Phân bố / bàn giao thiết bị & tài sản 
+- Tìm kiếm dữ liệu
+- Quản lý thông tin hệ thống
+### 4.2 Nhân viên
+- Xem thông tin tài sản và thiết bị
+- Tìm kiếm dữ liệu
+- Xem thiết bị được phân bố
+- Gửi yêu cầu / báo cáo tình trạng thiết bị
+
+---
+
+## 5. Chức năng hệ thống
+### 5.1 Chức năng của Admin
+#### Đăng nhập hệ thống
+Cho phép admin đăng nhập để sử dụng các chức năng quản lý
+#### Quản lý tài sản
+- Thêm tài sản
+- Sửa thông tin tài sản
+- Xóa tài sản
+- Xem danh sách tài sản
+#### Quản lý thiết bị
+- Thêm thiết bị
+- Sửa thông tin thiết bị
+- Xóa thiết bị
+- Cập nhật trạng thái thiết bị
+### Phân bổ thiết bị & tài sản
+- Bàn giao thiết bị cho phòng ban hoặc nhân viên
+- Cập nhật thông tin người sử dụng thiết bị
+- Theo dõi thiết bị đang sử dụng hoặc chưa sử dụng
+#### Tìm kiếm dữ liệu
+Cho phép tìm kiếm tài sản và thiết bị theo tên hoặc trạng thái
+
+---
+
+### 5.2 Chức năng của User
+#### Đăng nhập hệ thống
+Cho phép nhân viên đăng nhập vào hệ thống
+#### Xem thông tin
+Cho phép xem danh sách tài sản và thiết bị
+#### Tìm kiếm dữ liệu
+Cho phép tìm kiếm thông tin cần thiết.
+### Xem thiết bị được phân bổ
+Cho phép nhân viên xem thông tin thiết bị được bàn giao
+#### Gửi yêu cầu / báo cáo
+Cho phép gửi báo cáo tình trạng thiết bị cho admin
+
+---
+
+## 6. Phân tích và thiết kế hệ thống
+### 6.1 Use Case Diagram
+![Biểu đồ Use Case](Images/UseCase Tổng Quan.png)
+### 6.2 Class Diagram
+![Biểu đồ lớp](Images/Diagram1.png)
+### 6.3 Activity Diagram
+![Biểu đồ hoạt động](Images/ActivityDiagram1.png)
+### 6.4 Sequence Diagram
+
+## 7. Thiết kế cơ sở dữ liệu
+### Bảng Người dùng 
+- Mã người dùng
+- Tên đăng nhập
+- Mật khẩu
+- Vai trò người dùng
+- Phòng ban
+### Bảng Tài sản (Asset)
+- Mã tài sản
+- Tên tài sản
+- Loại tài sản
+- Trạng thái tài sản
+- Người/phòng ban được phân bổ
+- Ngày tạo dữ liệu
+### Bảng Thiết bị (Device)
+- Mã thiết bị
+- Tên thiết bị
+- Loại thiết bị
+- Trạng thái thiết bị
+- Người/phòng ban được phân bổ
+- Ngày bàn giao thiết bị
+### Bảng Báo cáo (Report)
+- Mã báo cáo
+- Mã người dùng
+- Nội dung báo cáo
+- Thời gian tạo báo cáo
+- Trạng thái xử lý
+
+---
+
+## 8. Kiểm thử hệ thống
+- Kiểm tra đăng nhập
+- Kiểm tra phân quyền
+- Kiểm tra CRUD dữ liệu
+- Kiểm tra tìm kiếm dữ liệu
+- Kiểm tra kết nối database
+
+---
+
+## 9. Kết quả mong đợi
+- Xây dựng được hệ thống quản lý tài sản và thiết bị cơ bản
+- Hỗ trợ quản lý và tìm kiếm dữ liệu dễ dàng hơn
+- Theo dõi tình trạng và phân bổ thiết bị
+- Hoàn thiện giao diện, database và các chức năng chính của hệ thống
