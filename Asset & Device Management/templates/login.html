@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Asset & Device Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0b2b3b 0%, #1a4a5f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            display: flex;
+            width: 950px;
+            max-width: 95%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .login-banner {
+            flex: 1;
+            background: linear-gradient(135deg, #1e6f5c, #0e5a49);
+            padding: 40px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-banner h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .login-banner .feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+            font-size: 15px;
+        }
+
+        .login-form {
+            flex: 1;
+            padding: 50px 40px;
+            background: white;
+        }
+
+        .login-form h2 {
+            font-size: 28px;
+            color: #1e2a3a;
+            margin-bottom: 8px;
+        }
+
+        .login-form .sub {
+            color: #5e6f8d;
+            margin-bottom: 30px;
+            border-left: 3px solid #1e6f5c;
+            padding-left: 12px;
+        }
+
+        .input-group {
+            margin-bottom: 22px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #1e2a3a;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cfdfe9;
+            border-radius: 16px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #1e6f5c;
+            box-shadow: 0 0 0 3px rgba(30, 111, 92, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            color: #5e6f8d;
+            cursor: pointer;
+        }
+
+        .btn-login {
+            background: #1e6f5c;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #0e5a49;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .role-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .role-tag.admin {
+            background: #ff9800;
+            color: white;
+        }
+
+        .role-tag.employee {
+            background: #4caf50;
+            color: white;
+        }
+
+        .error-border {
+            border-color: #c62828 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-banner">
+            <h1>Asset & Device<br/>Management</h1>
+            <div class="feature">✓ Quản lý tài sản thông minh</div>
+            <div class="feature">✓ Theo dõi tình trạng thiết bị</div>
+            <div class="feature">✓ Báo cáo & yêu cầu nhanh chóng</div>
+        </div>
+        <div class="login-form">
+            <h2>Đăng nhập</h2>
+            <div class="sub">Nhập thông tin để truy cập hệ thống</div>
+            
+            <div id="clientError" class="error-message" style="display: none;"></div>
+            
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            <form id="loginForm" method="POST">
+                <div class="input-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="username" name="username" placeholder="VD: employee1 hoặc admin" autofocus value="{{ username if username else '' }}">
+                </div>
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="password" name="password" placeholder="••••••">
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isAdmin" name="is_admin" value="1">
+                    <label for="isAdmin">Đăng nhập với tư cách Quản trị viên (Admin)</label>
+                </div>
+                <button type="submit" class="btn-login">Đăng nhập</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Hàm kiểm tra emoji
+        function hasEmoji(str) {
+            const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
+            return emojiRegex.test(str);
+        }
+
+        // Hàm kiểm tra ký tự đặc biệt (chỉ cho phép chữ, số, _, .)
+        function hasInvalidChars(str) {
+            const validRegex = /^[a-zA-Z0-9_.]+$/;
+            return !validRegex.test(str);
+        }
+
+        // Hàm kiểm tra khoảng trắng
+        function hasSpace(str) {
+            return str.includes(' ');
+        }
+
+        // Hàm kiểm tra độ dài
+        function isValidLength(str, min, max) {
+            return str.length >= min && str.length <= max;
+        }
+
+        // Xử lý submit form
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const clientError = document.getElementById('clientError');
+            
+            // Reset lỗi
+            clientError.style.display = 'none';
+            clientError.innerHTML = '';
+            document.getElementById('username').classList.remove('error-border');
+            document.getElementById('password').classList.remove('error-border');
+            
+            let errors = [];
+            
+            // ========== KIỂM TRA TÊN ĐĂNG NHẬP ==========
+            if (!username) {
+                errors.push('Tên đăng nhập không được để trống');
+                document.getElementById('username').classList.add('error-border');
+            } else {
+                if (username.length < 3) {
+                    errors.push('Tên đăng nhập phải có ít nhất 3 ký tự');
+                    document.getElementById('username').classList.add('error-border');
+                }
+                if (username.length > 50) {
+                    errors.push('Tên đăng nhập không được quá 50 ký tự');
+                    document.getElementById('username').classList.add('error-border');
+                }
+                if (hasSpace(username)) {
+                    errors.push('Tên đăng nhập không được chứa khoảng trắng');
+                    document.getElementById('username').classList.add('error-border');
+                }
+                if (hasEmoji(username)) {
+                    errors.push('Tên đăng nhập không được chứa emoji');
+                    document.getElementById('username').classList.add('error-border');
+                }
+                if (hasInvalidChars(username)) {
+                    errors.push('Tên đăng nhập chỉ được chứa chữ cái, số, dấu gạch dưới (_) và dấu chấm (.)');
+                    document.getElementById('username').classList.add('error-border');
+                }
+            }
+            
+            // ========== KIỂM TRA MẬT KHẨU ==========
+            if (!password) {
+                errors.push('Mật khẩu không được để trống');
+                document.getElementById('password').classList.add('error-border');
+            } else {
+                if (password.length < 6) {
+                    errors.push('Mật khẩu phải có ít nhất 6 ký tự');
+                    document.getElementById('password').classList.add('error-border');
+                }
+                if (password.length > 100) {
+                    errors.push('Mật khẩu không được quá 100 ký tự');
+                    document.getElementById('password').classList.add('error-border');
+                }
+                if (hasSpace(password)) {
+                    errors.push('Mật khẩu không được chứa khoảng trắng');
+                    document.getElementById('password').classList.add('error-border');
+                }
+            }
+            
+            // Nếu có lỗi, ngăn submit và hiển thị
+            if (errors.length > 0) {
+                e.preventDefault();
+                clientError.style.display = 'block';
+                clientError.innerHTML = errors.join('<br>');
+                return false;
+            }
+            
+            // Nếu không có lỗi, cho phép submit
+            return true;
+        });
+    </script>
+</body>
+</html>
