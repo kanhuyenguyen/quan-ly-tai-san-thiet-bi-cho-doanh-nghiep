@@ -1,0 +1,559 @@
+{% extends "Admin/layout.html" %}
+
+{% block title %}Admin - Xử lý yêu cầu mượn{% endblock %}
+
+{% block content %}
+<style>
+    .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .search-box {
+        padding: 8px 14px;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        width: 280px;
+        font-size: 14px;
+    }
+    .status-filter {
+        padding: 8px 14px;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+    }
+    .request-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 16px;
+        overflow: hidden;
+        transition: 0.2s;
+    }
+    .request-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .request-header {
+        background: #f9fafb;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .request-id {
+        font-weight: 600;
+        color: #1a3c34;
+    }
+    .request-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    .request-status.pending {
+        background: #feebc8;
+        color: #7b341e;
+    }
+    .request-status.approved {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    .request-status.rejected {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+    .request-body {
+        padding: 16px 20px;
+    }
+    .request-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    .info-item {
+        background: #f9fafb;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 4px;
+        font-size: 12px;
+    }
+    .info-value {
+        color: #2d3748;
+    }
+    .request-reason {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .request-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 12px;
+    }
+    .btn-approve {
+        background: #c6f6d5;
+        color: #22543d;
+        border: none;
+        padding: 6px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .btn-reject {
+        background: #fed7d7;
+        color: #742a2a;
+        border: none;
+        padding: 6px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .btn-view {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+    }
+    .page-btn {
+        padding: 6px 12px;
+        border: 1px solid #cbd5e0;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .page-btn.active {
+        background: #1a3c34;
+        color: white;
+        border-color: #1a3c34;
+    }
+    .empty-message {
+        text-align: center;
+        padding: 60px;
+        color: #718096;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal.show {
+        display: flex;
+    }
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        width: 500px;
+        max-width: 90%;
+    }
+    .modal-content h3 {
+        color: #1a3c34;
+        margin-bottom: 20px;
+    }
+    .modal-content textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+    .modal-content input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+    .modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    .btn-cancel {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .btn-confirm {
+        background: #1a3c34;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        font-size: 14px;
+        color: #4a5568;
+    }
+</style>
+
+<div class="card">
+    <div class="card-title">Xử lý yêu cầu mượn</div>
+    
+    <div class="filter-bar">
+        <input type="text" id="searchRequest" class="search-box" placeholder="Tìm kiếm theo tài sản hoặc người mượn...">
+        <select id="statusFilter" class="status-filter">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="Chờ xét duyệt">Chờ xét duyệt</option>
+            <option value="Đã duyệt">Đã duyệt</option>
+            <option value="Từ chối">Từ chối</option>
+        </select>
+    </div>
+    
+    <div id="requestsList">
+        <div style="text-align: center; padding: 40px;">Đang tải dữ liệu...</div>
+    </div>
+    
+    <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Modal xem chi tiết -->
+<div id="viewRequestModal" class="modal">
+    <div class="modal-content">
+        <h3>Chi tiết yêu cầu mượn</h3>
+        <div id="viewRequestContent" style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; max-height: 400px; overflow-y: auto;"></div>
+        <div class="modal-buttons">
+            <button id="closeViewModal" class="btn-cancel">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal duyệt yêu cầu -->
+<div id="approveModal" class="modal">
+    <div class="modal-content">
+        <h3>Duyệt yêu cầu mượn</h3>
+        <div id="approveInfo" style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;"></div>
+        <div class="form-group">
+            <label>Ngày bàn giao dự kiến</label>
+            <input type="date" id="handoverDate" value="">
+        </div>
+        <div class="form-group">
+            <label>Ghi chú (tùy chọn)</label>
+            <textarea id="approveNote" rows="2" placeholder="Nhập ghi chú nếu có..."></textarea>
+        </div>
+        <div class="modal-buttons">
+            <button id="closeApproveModal" class="btn-cancel">Hủy</button>
+            <button id="confirmApproveBtn" class="btn-confirm">Xác nhận duyệt</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal từ chối yêu cầu -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <h3>Từ chối yêu cầu mượn</h3>
+        <div id="rejectInfo" style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;"></div>
+        <div class="form-group">
+            <label>Lý do từ chối</label>
+            <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối..."></textarea>
+        </div>
+        <div class="modal-buttons">
+            <button id="closeRejectModal" class="btn-cancel">Hủy</button>
+            <button id="confirmRejectBtn" class="btn-confirm">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allRequests = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let currentRequest = null;
+
+    // ========== LOAD YÊU CẦU MƯỢN ==========
+    async function loadRequests() {
+        try {
+            const res = await fetch('/api/admin/borrow-requests/all');
+            allRequests = await res.json();
+            renderRequests();
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('requestsList').innerHTML = '<div class="empty-message">Lỗi tải dữ liệu</div>';
+        }
+    }
+
+    function renderRequests() {
+        const search = document.getElementById('searchRequest').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        let filtered = allRequests.filter(r => {
+            const matchSearch = r.assetName.toLowerCase().includes(search) || r.userName.toLowerCase().includes(search);
+            const matchStatus = statusFilter === 'all' || r.status === statusFilter;
+            return matchSearch && matchStatus;
+        });
+        
+        const totalPages = Math.ceil(filtered.length / itemsPerPage);
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageRequests = filtered.slice(start, end);
+        
+        const container = document.getElementById('requestsList');
+        if (pageRequests.length === 0) {
+            container.innerHTML = '<div class="empty-message">Không có yêu cầu mượn nào</div>';
+        } else {
+            let html = '';
+            for (let r of pageRequests) {
+                let statusClass = '';
+                let statusText = '';
+                if (r.status === 'Chờ xét duyệt') {
+                    statusClass = 'pending';
+                    statusText = 'Chờ xét duyệt';
+                } else if (r.status === 'Đã duyệt') {
+                    statusClass = 'approved';
+                    statusText = 'Đã duyệt';
+                } else {
+                    statusClass = 'rejected';
+                    statusText = 'Từ chối';
+                }
+                
+                html += `
+                    <div class="request-card">
+                        <div class="request-header">
+                            <div>
+                                <span class="request-id">Mã yêu cầu: #${r.id}</span>
+                                <span class="request-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #718096;">
+                                Người mượn: ${r.userName} - ${r.department}
+                            </div>
+                        </div>
+                        <div class="request-body">
+                            <div class="request-info">
+                                <div class="info-item">
+                                    <div class="info-label">Tài sản</div>
+                                    <div class="info-value">${r.assetName}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Ngày mượn dự kiến</div>
+                                    <div class="info-value">${r.borrowDate || '---'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Ngày trả dự kiến</div>
+                                    <div class="info-value">${r.returnDate || '---'}</div>
+                                </div>
+                            </div>
+                            <div class="request-reason">
+                                <strong>Lý do mượn:</strong><br>
+                                ${r.reason}
+                            </div>
+                            <div class="request-actions">
+                                <button class="btn-view" onclick="viewRequest(${r.id})">Xem chi tiết</button>
+                `;
+                
+                if (r.status === 'Chờ xét duyệt') {
+                    html += `
+                        <button class="btn-approve" onclick="openApproveModal(${r.id})">Duyệt</button>
+                        <button class="btn-reject" onclick="openRejectModal(${r.id})">Từ chối</button>
+                    `;
+                }
+                
+                html += `</div></div></div>`;
+            }
+            container.innerHTML = html;
+        }
+        
+        renderPagination(totalPages);
+    }
+    
+    function renderPagination(totalPages) {
+        const pagination = document.getElementById('pagination');
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        pagination.innerHTML = html;
+    }
+    
+    window.goToPage = (page) => {
+        currentPage = page;
+        renderRequests();
+    };
+    
+    // ========== XEM CHI TIẾT ==========
+    const viewModal = document.getElementById('viewRequestModal');
+    
+    window.viewRequest = (id) => {
+        const request = allRequests.find(r => r.id === id);
+        if (request) {
+            document.getElementById('viewRequestContent').innerHTML = `
+                <div><strong>Mã yêu cầu:</strong> #${request.id}</div>
+                <div><strong>Người mượn:</strong> ${request.userName}</div>
+                <div><strong>Phòng ban:</strong> ${request.department}</div>
+                <div><strong>Tài sản:</strong> ${request.assetName}</div>
+                <div><strong>Lý do mượn:</strong> ${request.reason}</div>
+                <div><strong>Ngày mượn dự kiến:</strong> ${request.borrowDate || '---'}</div>
+                <div><strong>Ngày trả dự kiến:</strong> ${request.returnDate || '---'}</div>
+                <div><strong>Trạng thái:</strong> ${request.status}</div>
+                <div><strong>Ngày gửi yêu cầu:</strong> ${request.createdAt}</div>
+                ${request.processNote ? `<div><strong>Ghi chú xử lý:</strong> ${request.processNote}</div>` : ''}
+            `;
+            viewModal.classList.add('show');
+        }
+    };
+    
+    document.getElementById('closeViewModal').onclick = () => viewModal.classList.remove('show');
+    
+    // ========== DUYỆT YÊU CẦU ==========
+    const approveModal = document.getElementById('approveModal');
+    
+    window.openApproveModal = (id) => {
+        currentRequest = allRequests.find(r => r.id === id);
+        if (currentRequest) {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('handoverDate').value = today;
+            document.getElementById('approveNote').value = '';
+            document.getElementById('approveInfo').innerHTML = `
+                <strong>Yêu cầu #${currentRequest.id}</strong><br>
+                Tài sản: ${currentRequest.assetName}<br>
+                Người mượn: ${currentRequest.userName} - ${currentRequest.department}
+            `;
+            approveModal.classList.add('show');
+        }
+    };
+    
+    document.getElementById('closeApproveModal').onclick = () => approveModal.classList.remove('show');
+    
+    document.getElementById('confirmApproveBtn').onclick = async () => {
+        if (!currentRequest) return;
+        
+        const handoverDate = document.getElementById('handoverDate').value;
+        const note = document.getElementById('approveNote').value;
+        
+        try {
+            const res = await fetch(`/api/admin/borrow-requests/${currentRequest.id}/approve`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    handoverDate: handoverDate,
+                    note: note
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('Đã duyệt yêu cầu mượn!');
+                approveModal.classList.remove('show');
+                loadRequests();
+            } else {
+                alert('Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            alert('Lỗi: ' + error.message);
+        }
+    };
+    
+    // ========== TỪ CHỐI YÊU CẦU ==========
+    const rejectModal = document.getElementById('rejectModal');
+    
+    window.openRejectModal = (id) => {
+        currentRequest = allRequests.find(r => r.id === id);
+        if (currentRequest) {
+            document.getElementById('rejectReason').value = '';
+            document.getElementById('rejectInfo').innerHTML = `
+                <strong>Yêu cầu #${currentRequest.id}</strong><br>
+                Tài sản: ${currentRequest.assetName}<br>
+                Người mượn: ${currentRequest.userName} - ${currentRequest.department}
+            `;
+            rejectModal.classList.add('show');
+        }
+    };
+    
+    document.getElementById('closeRejectModal').onclick = () => rejectModal.classList.remove('show');
+    
+    document.getElementById('confirmRejectBtn').onclick = async () => {
+        if (!currentRequest) return;
+        
+        const reason = document.getElementById('rejectReason').value;
+        if (!reason) {
+            alert('Vui lòng nhập lý do từ chối');
+            return;
+        }
+        
+        try {
+            const res = await fetch(`/api/admin/borrow-requests/${currentRequest.id}/reject`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reason: reason
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('Đã từ chối yêu cầu mượn!');
+                rejectModal.classList.remove('show');
+                loadRequests();
+            } else {
+                alert('Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            alert('Lỗi: ' + error.message);
+        }
+    };
+    
+    // ========== LỌC VÀ TÌM KIẾM ==========
+    document.getElementById('searchRequest').onkeyup = () => {
+        currentPage = 1;
+        renderRequests();
+    };
+    document.getElementById('statusFilter').onchange = () => {
+        currentPage = 1;
+        renderRequests();
+    };
+    
+    // ========== KHỞI TẠO ==========
+    loadRequests();
+    
+    window.onclick = (e) => {
+        if (e.target === viewModal) viewModal.classList.remove('show');
+        if (e.target === approveModal) approveModal.classList.remove('show');
+        if (e.target === rejectModal) rejectModal.classList.remove('show');
+    };
+</script>
+{% endblock %}

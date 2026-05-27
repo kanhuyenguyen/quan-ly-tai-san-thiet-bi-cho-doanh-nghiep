@@ -1,0 +1,602 @@
+{% extends "Admin/layout.html" %}
+
+{% block title %}Admin - Phân bổ / Bàn giao{% endblock %}
+
+{% block content %}
+<style>
+    .assign-container {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    .assign-box {
+        flex: 1;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+    .assign-header {
+        background: #1a3c34;
+        color: white;
+        padding: 15px 20px;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    .assign-body {
+        padding: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .asset-item, .device-item {
+        background: #f9fafb;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .asset-item:hover, .device-item:hover {
+        border-color: #1a3c34;
+        background: #f0fdf4;
+    }
+    .asset-item.selected, .device-item.selected {
+        border-color: #1a3c34;
+        background: #e6f7ec;
+        border-left: 4px solid #1a3c34;
+    }
+    .asset-name, .device-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+    .asset-info, .device-info {
+        font-size: 12px;
+        color: #718096;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    .assign-form {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .form-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a3c34;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #1a3c34;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        font-size: 14px;
+        color: #4a5568;
+    }
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: #1a3c34;
+    }
+    .form-row {
+        display: flex;
+        gap: 15px;
+    }
+    .form-row .form-group {
+        flex: 1;
+    }
+    .btn-assign {
+        background: #1a3c34;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        width: 100%;
+    }
+    .btn-assign:hover {
+        background: #2a6b5c;
+    }
+    .selected-info {
+        background: #e6f7ec;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    .empty-message {
+        text-align: center;
+        color: #718096;
+        padding: 40px;
+    }
+    .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .tab-btn {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+    .tab-btn.active {
+        background: #1a3c34;
+        color: white;
+    }
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .quantity-control input {
+        width: 80px;
+        text-align: center;
+    }
+</style>
+
+<div class="tabs">
+    <button id="tabAssignAsset" class="tab-btn active"> Phân bổ tài sản</button>
+    <button id="tabAssignDevice" class="tab-btn"> Phân bổ thiết bị</button>
+</div>
+
+<!-- Phân bổ tài sản -->
+<div id="assignAssetPanel">
+    <div class="assign-container">
+        <div class="assign-box">
+            <div class="assign-header">Danh sách tài sản chưa sử dụng</div>
+            <div class="assign-body" id="assetList">
+                <div class="empty-message">Đang tải...</div>
+            </div>
+        </div>
+        <div class="assign-box">
+            <div class="assign-header">Danh sách nhân viên</div>
+            <div class="assign-body" id="userList">
+                <div class="empty-message">Đang tải...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="assign-form" id="assetAssignForm" style="display: none;">
+        <div class="form-title">Thông tin bàn giao tài sản</div>
+        <div id="selectedAssetInfo" class="selected-info"></div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Số lượng bàn giao</label>
+                <div class="quantity-control">
+                    <input type="number" id="assetQuantity" min="1" value="1" style="width: 100px;">
+                    <span id="assetMaxQuantity" style="color: #718096; font-size: 12px;"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Người nhận bàn giao <span style="color: red;">*</span></label>
+                <select id="assignUser" class="form-control">
+                    <option value="">-- Chọn người nhận --</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Ngày bàn giao</label>
+                <input type="date" id="assignDate" value="">
+            </div>
+            <div class="form-group">
+                <label>Ngày dự kiến hoàn trả</label>
+                <input type="date" id="returnDate" value="">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Ghi chú</label>
+            <input type="text" id="assignNote" placeholder="Nhập ghi chú (nếu có)">
+        </div>
+        <button class="btn-assign" id="confirmAssignAsset">Xác nhận bàn giao</button>
+    </div>
+</div>
+
+<!-- Phân bổ thiết bị -->
+<div id="assignDevicePanel" style="display: none;">
+    <div class="assign-container">
+        <div class="assign-box">
+            <div class="assign-header">Danh sách thiết bị chưa sử dụng</div>
+            <div class="assign-body" id="deviceList">
+                <div class="empty-message">Đang tải...</div>
+            </div>
+        </div>
+        <div class="assign-box">
+            <div class="assign-header">Danh sách nhân viên</div>
+            <div class="assign-body" id="userListDevice">
+                <div class="empty-message">Đang tải...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="assign-form" id="deviceAssignForm" style="display: none;">
+        <div class="form-title">Thông tin bàn giao thiết bị</div>
+        <div id="selectedDeviceInfo" class="selected-info"></div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Số lượng bàn giao</label>
+                <div class="quantity-control">
+                    <input type="number" id="deviceQuantity" min="1" value="1" style="width: 100px;">
+                    <span id="deviceMaxQuantity" style="color: #718096; font-size: 12px;"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Người nhận bàn giao <span style="color: red;">*</span></label>
+                <select id="assignUserDevice" class="form-control">
+                    <option value="">-- Chọn người nhận --</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Ngày bàn giao</label>
+                <input type="date" id="assignDateDevice" value="">
+            </div>
+            <div class="form-group">
+                <label>Ngày dự kiến hoàn trả</label>
+                <input type="date" id="returnDateDevice" value="">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Ghi chú</label>
+            <input type="text" id="assignNoteDevice" placeholder="Nhập ghi chú (nếu có)">
+        </div>
+        <button class="btn-assign" id="confirmAssignDevice">Xác nhận bàn giao</button>
+    </div>
+</div>
+
+<script>
+    let availableAssets = [];
+    let availableDevices = [];
+    let employees = [];
+    let selectedAssetId = null;
+    let selectedDeviceId = null;
+    let selectedAsset = null;
+    let selectedDevice = null;
+
+    // ========== CHUYỂN TAB ==========
+    const tabAssignAsset = document.getElementById('tabAssignAsset');
+    const tabAssignDevice = document.getElementById('tabAssignDevice');
+    const assignAssetPanel = document.getElementById('assignAssetPanel');
+    const assignDevicePanel = document.getElementById('assignDevicePanel');
+
+    tabAssignAsset.onclick = () => {
+        tabAssignAsset.classList.add('active');
+        tabAssignDevice.classList.remove('active');
+        assignAssetPanel.style.display = 'block';
+        assignDevicePanel.style.display = 'none';
+        loadAvailableAssets();
+        loadEmployees('assignUser');
+    };
+
+    tabAssignDevice.onclick = () => {
+        tabAssignDevice.classList.add('active');
+        tabAssignAsset.classList.remove('active');
+        assignAssetPanel.style.display = 'none';
+        assignDevicePanel.style.display = 'block';
+        loadAvailableDevices();
+        loadEmployees('assignUserDevice');
+    };
+
+    // ========== LOAD DANH SÁCH NHÂN VIÊN (CHỈ EMPLOYEE) ==========
+    async function loadEmployees(selectId) {
+        try {
+            const res = await fetch('/api/admin/users');
+            const allUsers = await res.json();
+            employees = allUsers.filter(u => u.role === 'Employee');
+            
+            const select = document.getElementById(selectId);
+            if (select) {
+                let html = '<option value="">-- Chọn người nhận --</option>';
+                for (let emp of employees) {
+                    html += `<option value="${emp.id}|${emp.fullname}|${emp.department}">👤 ${emp.fullname} - ${emp.department}</option>`;
+                }
+                select.innerHTML = html;
+            }
+            
+            // Cũng cập nhật danh sách hiển thị bên cạnh
+            renderUserList(selectId === 'assignUser' ? 'userList' : 'userListDevice');
+        } catch (error) {
+            console.error('Lỗi tải nhân viên:', error);
+        }
+    }
+
+    function renderUserList(containerId) {
+        const container = document.getElementById(containerId);
+        if (employees.length === 0) {
+            container.innerHTML = '<div class="empty-message">👥 Chưa có nhân viên nào trong hệ thống</div>';
+            return;
+        }
+        
+        let html = '';
+        for (let emp of employees) {
+            html += `
+                <div class="asset-item" style="cursor: default;">
+                    <div class="asset-name">👤 ${emp.fullname}</div>
+                    <div class="asset-info">
+                        <span>Phòng ban: ${emp.department || '---'}</span>
+                        <span>Username: ${emp.username}</span>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    // ========== LOAD TÀI SẢN CHƯA SỬ DỤNG ==========
+    async function loadAvailableAssets() {
+        try {
+            const res = await fetch('/api/assets/available');
+            availableAssets = await res.json();
+            renderAssetList();
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('assetList').innerHTML = '<div class="empty-message">❌ Lỗi tải dữ liệu</div>';
+        }
+    }
+
+    function renderAssetList() {
+        const container = document.getElementById('assetList');
+        if (availableAssets.length === 0) {
+            container.innerHTML = '<div class="empty-message">📭 Không có tài sản nào chưa sử dụng</div>';
+            return;
+        }
+        
+        let html = '';
+        for (let asset of availableAssets) {
+            let selectedClass = (selectedAssetId === asset.id) ? 'selected' : '';
+            html += `
+                <div class="asset-item ${selectedClass}" onclick="selectAsset(${asset.id})">
+                    <div class="asset-name">📦 ${asset.name}</div>
+                    <div class="asset-info">
+                        <span>Mã: ${asset.code}</span>
+                        <span>Loại: ${asset.type || '---'}</span>
+                        <span>Trạng thái: ${asset.status}</span>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    window.selectAsset = (id) => {
+        selectedAssetId = id;
+        selectedAsset = availableAssets.find(a => a.id === id);
+        renderAssetList();
+        
+        if (selectedAsset) {
+            document.getElementById('selectedAssetInfo').innerHTML = `
+                📦 <strong>${selectedAsset.name}</strong> (${selectedAsset.code})<br>
+                Loại: ${selectedAsset.type || '---'} | Trạng thái: ${selectedAsset.status}
+            `;
+            document.getElementById('assetMaxQuantity').innerHTML = `(Có sẵn: 1)`;
+            document.getElementById('assetQuantity').value = 1;
+            document.getElementById('assetQuantity').max = 1;
+            
+            // Ngày mặc định
+            const today = new Date().toISOString().split('T')[0];
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            const defaultReturn = nextMonth.toISOString().split('T')[0];
+            
+            document.getElementById('assignDate').value = today;
+            document.getElementById('returnDate').value = defaultReturn;
+            
+            document.getElementById('assetAssignForm').style.display = 'block';
+        }
+    };
+
+    // ========== LOAD THIẾT BỊ CHƯA SỬ DỤNG ==========
+    async function loadAvailableDevices() {
+        try {
+            const res = await fetch('/api/devices');
+            const allDevices = await res.json();
+            availableDevices = allDevices.filter(d => d.status !== 'Đang sử dụng');
+            renderDeviceList();
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('deviceList').innerHTML = '<div class="empty-message">❌ Lỗi tải dữ liệu</div>';
+        }
+    }
+
+    function renderDeviceList() {
+        const container = document.getElementById('deviceList');
+        if (availableDevices.length === 0) {
+            container.innerHTML = '<div class="empty-message">📭 Không có thiết bị nào chưa sử dụng</div>';
+            return;
+        }
+        
+        let html = '';
+        for (let device of availableDevices) {
+            let selectedClass = (selectedDeviceId === device.id) ? 'selected' : '';
+            html += `
+                <div class="device-item ${selectedClass}" onclick="selectDevice(${device.id})">
+                    <div class="device-name">🖥️ ${device.name}</div>
+                    <div class="device-info">
+                        <span>Mã: ${device.code}</span>
+                        <span>Loại: ${device.type || '---'}</span>
+                        <span>Trạng thái: ${device.status}</span>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    window.selectDevice = (id) => {
+        selectedDeviceId = id;
+        selectedDevice = availableDevices.find(d => d.id === id);
+        renderDeviceList();
+        
+        if (selectedDevice) {
+            document.getElementById('selectedDeviceInfo').innerHTML = `
+                🖥️ <strong>${selectedDevice.name}</strong> (${selectedDevice.code})<br>
+                Loại: ${selectedDevice.type || '---'} | Trạng thái: ${selectedDevice.status}
+            `;
+            document.getElementById('deviceMaxQuantity').innerHTML = `(Có sẵn: 1)`;
+            document.getElementById('deviceQuantity').value = 1;
+            document.getElementById('deviceQuantity').max = 1;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            const defaultReturn = nextMonth.toISOString().split('T')[0];
+            
+            document.getElementById('assignDateDevice').value = today;
+            document.getElementById('returnDateDevice').value = defaultReturn;
+            
+            document.getElementById('deviceAssignForm').style.display = 'block';
+        }
+    };
+
+    // ========== XÁC NHẬN BÀN GIAO TÀI SẢN ==========
+    document.getElementById('confirmAssignAsset').onclick = async () => {
+        if (!selectedAssetId) {
+            alert('Vui lòng chọn tài sản cần bàn giao');
+            return;
+        }
+        
+        const userValue = document.getElementById('assignUser').value;
+        if (!userValue) {
+            alert('Vui lòng chọn người nhận');
+            return;
+        }
+        
+        const [userId, userName, department] = userValue.split('|');
+        const quantity = document.getElementById('assetQuantity').value;
+        const assignDate = document.getElementById('assignDate').value;
+        const returnDate = document.getElementById('returnDate').value;
+        const note = document.getElementById('assignNote').value;
+        
+        if (!assignDate) {
+            alert('Vui lòng chọn ngày bàn giao');
+            return;
+        }
+        
+        const confirmMsg = `Xác nhận bàn giao tài sản?\n\nTài sản: ${selectedAsset.name}\nSố lượng: ${quantity}\nNgười nhận: ${userName} - ${department}\nNgày bàn giao: ${assignDate}\nNgày dự kiến hoàn trả: ${returnDate || 'Không có'}`;
+        if (!confirm(confirmMsg)) return;
+        
+        try {
+            const res = await fetch(`/api/admin/assets/${selectedAssetId}/assign`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    userName: userName,
+                    department: department,
+                    quantity: quantity,
+                    assignDate: assignDate,
+                    returnDate: returnDate,
+                    note: note
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('✅ Bàn giao tài sản thành công!');
+                selectedAssetId = null;
+                selectedAsset = null;
+                document.getElementById('assetAssignForm').style.display = 'none';
+                document.getElementById('assignUser').value = '';
+                document.getElementById('assignNote').value = '';
+                document.getElementById('assetQuantity').value = 1;
+                loadAvailableAssets();
+            } else {
+                alert('❌ Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Lỗi: ' + error.message);
+        }
+    };
+
+    // ========== XÁC NHẬN BÀN GIAO THIẾT BỊ ==========
+    document.getElementById('confirmAssignDevice').onclick = async () => {
+        if (!selectedDeviceId) {
+            alert('Vui lòng chọn thiết bị cần bàn giao');
+            return;
+        }
+        
+        const userValue = document.getElementById('assignUserDevice').value;
+        if (!userValue) {
+            alert('Vui lòng chọn người nhận');
+            return;
+        }
+        
+        const [userId, userName, department] = userValue.split('|');
+        const quantity = document.getElementById('deviceQuantity').value;
+        const assignDate = document.getElementById('assignDateDevice').value;
+        const returnDate = document.getElementById('returnDateDevice').value;
+        const note = document.getElementById('assignNoteDevice').value;
+        
+        if (!assignDate) {
+            alert('Vui lòng chọn ngày bàn giao');
+            return;
+        }
+        
+        const confirmMsg = `Xác nhận bàn giao thiết bị?\n\nThiết bị: ${selectedDevice.name}\nSố lượng: ${quantity}\nNgười nhận: ${userName} - ${department}\nNgày bàn giao: ${assignDate}\nNgày dự kiến hoàn trả: ${returnDate || 'Không có'}`;
+        if (!confirm(confirmMsg)) return;
+        
+        try {
+            const res = await fetch(`/api/admin/devices/${selectedDeviceId}/assign`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    userName: userName,
+                    department: department,
+                    quantity: quantity,
+                    assignDate: assignDate,
+                    returnDate: returnDate,
+                    note: note
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('✅ Bàn giao thiết bị thành công!');
+                selectedDeviceId = null;
+                selectedDevice = null;
+                document.getElementById('deviceAssignForm').style.display = 'none';
+                document.getElementById('assignUserDevice').value = '';
+                document.getElementById('assignNoteDevice').value = '';
+                document.getElementById('deviceQuantity').value = 1;
+                loadAvailableDevices();
+            } else {
+                alert('❌ Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Lỗi: ' + error.message);
+        }
+    };
+
+    // Khởi tạo
+    loadAvailableAssets();
+    loadEmployees('assignUser');
+</script>
+{% endblock %}

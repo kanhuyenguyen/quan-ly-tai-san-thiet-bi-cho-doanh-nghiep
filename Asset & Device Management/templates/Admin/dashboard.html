@@ -1,0 +1,118 @@
+{% extends "Admin/layout.html" %}
+
+{% block title %}Admin - Dashboard{% endblock %}
+
+{% block content %}
+<!-- Thống kê -->
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="stat-number" id="totalAssets">0</div>
+        <div class="stat-label">Tổng tài sản</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-number" id="totalDevices">0</div>
+        <div class="stat-label">Tổng thiết bị</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-number" id="pendingReports">0</div>
+        <div class="stat-label">Báo cáo chờ xử lý</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-number" id="pendingRequests">0</div>
+        <div class="stat-label">Yêu cầu mượn chờ duyệt</div>
+    </div>
+</div>
+
+<!-- Danh sách tài sản gần đây -->
+<div class="card">
+    <div class="card-title">Danh sách tài sản</div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã tài sản</th>
+                    <th>Tên tài sản</th>
+                    <th>Loại tài sản</th>
+                    <th>Trạng thái</th>
+                    <th>Người sử dụng</th>
+                </tr>
+            </thead>
+            <tbody id="assetTable">
+                <tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Danh sách báo cáo gần đây -->
+<div class="card">
+    <div class="card-title">Báo cáo gần đây</div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nội dung</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+            <tbody id="reportTable">
+                <tr><td colspan="4" style="text-align: center;">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function loadStats() {
+        try {
+            const assetsRes = await fetch('/api/admin/assets');
+            const assets = await assetsRes.json();
+            const devicesRes = await fetch('/api/admin/devices');
+            const devices = await devicesRes.json();
+            const reportsRes = await fetch('/api/admin/reports/pending');
+            const reports = await reportsRes.json();
+            const borrowRes = await fetch('/api/admin/borrow-requests/pending');
+            const borrow = await borrowRes.json();
+            
+            document.getElementById('totalAssets').innerText = assets.length;
+            document.getElementById('totalDevices').innerText = devices.length;
+            document.getElementById('pendingReports').innerText = reports.length;
+            document.getElementById('pendingRequests').innerText = borrow.length;
+            
+            // Hiển thị 5 tài sản gần nhất
+            let assetHtml = '';
+            for (let i = 0; i < Math.min(assets.length, 5); i++) {
+                let a = assets[i];
+                let statusClass = a.status === 'Đang sử dụng' ? 'status-badge active' : 'status-badge warning';
+                assetHtml += `<tr>
+                    <td>${a.code}</td>
+                    <td>${a.name}</td>
+                    <td>${a.type}</td>
+                    <td><span class="${statusClass}">${a.status}</span></td>
+                    <td>${a.assignedTo}</td>
+                </tr>`;
+            }
+            document.getElementById('assetTable').innerHTML = assetHtml || '<tr><td colspan="5">Không có dữ liệu</td></tr>';
+            
+            // Hiển thị 5 báo cáo gần nhất
+            let reportHtml = '';
+            for (let i = 0; i < Math.min(reports.length, 5); i++) {
+                let r = reports[i];
+                let statusClass = r.status === 'Chờ xử lý' ? 'status-badge warning' : 'status-badge active';
+                reportHtml += `<tr>
+                    <td>#${r.id}</td>
+                    <td>${r.content.substring(0, 80)}...</td>
+                    <td><span class="${statusClass}">${r.status}</span></td>
+                    <td>${r.createdAt}</td>
+                </tr>`;
+            }
+            document.getElementById('reportTable').innerHTML = reportHtml || '<tr><td colspan="4">Không có dữ liệu</td></tr>';
+        } catch (error) {
+            console.error('Lỗi:', error);
+        }
+    }
+    loadStats();
+</script>
+{% endblock %}
