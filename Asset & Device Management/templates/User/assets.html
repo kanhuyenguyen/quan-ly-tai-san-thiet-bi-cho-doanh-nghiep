@@ -1,0 +1,104 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Danh sách tài sản{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="filter-bar">
+        <h3 class="section-title"> Danh sách tài sản phòng {{ department }}</h3>
+        <div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm tài sản...">
+            <button class="btn-sm" id="refreshBtn"><i class="fas fa-sync-alt"></i> Tải lại</button>
+            <a href="/user/report-assets" class="btn-primary" style="text-decoration: none; display: inline-block;"> Báo cáo tài sản</a>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th> Mã</th>
+                    <th> Tên tài sản</th>
+                    <th> Loại</th>
+                    <th> Trạng thái</th>
+                    <th> Người sử dụng</th>
+                    <th> Ngày bàn giao</th>
+                </tr>
+            </thead>
+            <tbody id="assetTableBody">
+                <tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-pulse"></i> Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var currentUser = "{{ user_name }}";
+    var currentDepartment = "{{ department }}";
+
+    async function loadAssets() {
+        try {
+            const response = await fetch('/api/assets/in-use');
+            var allAssets = await response.json();
+            var filteredAssets = allAssets.filter(function(asset) {
+                return asset.assignedTo === currentDepartment || 
+                       asset.assignedTo === currentUser ||
+                       asset.assignedTo.indexOf(currentDepartment) !== -1;
+            });
+            renderTable(filteredAssets);
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('assetTableBody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;"><i class="fas fa-exclamation-triangle"></i> Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    function renderTable(assets, filterText = "") {
+        var filtered = assets;
+        if (filterText) {
+            filtered = filtered.filter(function(a) {
+                return a.name.toLowerCase().includes(filterText.toLowerCase()) || 
+                       a.code.toLowerCase().includes(filterText.toLowerCase());
+            });
+        }
+        var tbody = document.getElementById('assetTableBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"> Không có tài sản nào của phòng ' + currentDepartment + '</td></tr>';
+        } else {
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var a = filtered[i];
+                html += '<tr>';
+                html += '<td>' + a.code + '</td>';
+                html += '<td>' + a.name + '</strong></td>';
+                html += '<td>' + a.type + '</td>';
+                html += '<td><span class="status-badge">' + a.status + '</span></td>';
+                html += '<td>' + a.assignedTo + '</td>';
+                html += '<td>' + a.createdDate + '</td>';
+                html += '</tr>';
+            }
+            tbody.innerHTML = html;
+        }
+    }
+
+    var currentAssets = [];
+    async function loadAndStore() {
+        const response = await fetch('/api/assets/in-use');
+        var allAssets = await response.json();
+        currentAssets = allAssets.filter(function(asset) {
+            return asset.assignedTo === currentDepartment || 
+                   asset.assignedTo === currentUser ||
+                   asset.assignedTo.indexOf(currentDepartment) !== -1;
+        });
+        renderTable(currentAssets);
+    }
+    
+    document.getElementById('searchInput').addEventListener('keyup', function(e) {
+        renderTable(currentAssets, e.target.value);
+    });
+    document.getElementById('refreshBtn').onclick = function() {
+        document.getElementById('searchInput').value = '';
+        loadAndStore();
+    };
+    loadAndStore();
+</script>
+{% endblock %}

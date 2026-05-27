@@ -1,0 +1,131 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Báo cáo tài sản{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="section-title" style="margin-bottom: 20px;"> Báo cáo tình trạng tài sản</h3>
+    
+    <form id="reportForm">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Chọn tài sản:</label>
+            <select id="assetSelect" style="width: 100%; padding: 12px; border-radius: 16px; border: 1px solid #ccc;" required>
+                <option value="">-- Chọn tài sản --</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;"> Loại báo cáo:</label>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <label><input type="radio" name="reportType" value="broken" required>  Báo hỏng</label>
+                <label><input type="radio" name="reportType" value="repair"> Cần sửa chữa</label>
+                <label><input type="radio" name="reportType" value="replace"> Cần thay thế</label>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Mô tả chi tiết:</label>
+            <textarea id="description" rows="4" style="width: 100%; padding: 12px; border-radius: 16px; border: 1px solid #ccc;" placeholder="Mô tả tình trạng tài sản..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" class="btn-primary"> Gửi báo cáo</button>
+            <a href="/user/assets" class="btn-sm" style="text-decoration: none;"> Quay lại</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Khai báo biến toàn cục
+    var currentUserId = null;
+    var currentUserName = null;
+    
+    // Gán giá trị từ Flask (dùng cách này để tránh lỗi editor)
+    currentUserId = parseInt('{{ user_id }}');
+    currentUserName = '{{ user_name }}';
+
+    async function loadAssets() {
+        try {
+            const response = await fetch('/api/assets');
+            const assets = await response.json();
+            const select = document.getElementById('assetSelect');
+            select.innerHTML = '<option value="">-- Chọn tài sản --</option>';
+            for (let i = 0; i < assets.length; i++) {
+                const asset = assets[i];
+                const option = document.createElement('option');
+                option.value = asset.id + '|' + asset.name;
+                option.textContent = asset.code + ' - ' + asset.name + ' (' + asset.status + ')';
+                select.appendChild(option);
+            }
+        } catch (error) {
+            console.error('Lỗi tải tài sản:', error);
+            alert('Không thể tải danh sách tài sản');
+        }
+    }
+
+    document.getElementById('reportForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const selected = document.getElementById('assetSelect').value;
+        if (!selected) {
+            alert('Vui lòng chọn tài sản');
+            return;
+        }
+        
+        const parts = selected.split('|');
+        const assetId = parts[0];
+        const assetName = parts[1];
+        
+        const reportTypeRadios = document.querySelectorAll('input[name="reportType"]');
+        let reportType = null;
+        for (let i = 0; i < reportTypeRadios.length; i++) {
+            if (reportTypeRadios[i].checked) {
+                reportType = reportTypeRadios[i].value;
+                break;
+            }
+        }
+        
+        if (!reportType) {
+            alert('Vui lòng chọn loại báo cáo');
+            return;
+        }
+        
+        const description = document.getElementById('description').value.trim();
+        if (!description) {
+            alert('Vui lòng nhập mô tả');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/send-report-asset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: currentUserId,
+                    user_name: currentUserName,
+                    asset_id: assetId,
+                    asset_name: assetName,
+                    report_type: reportType,
+                    description: description
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert(' Báo cáo đã được gửi thành công!');
+                document.getElementById('description').value = '';
+                for (let i = 0; i < reportTypeRadios.length; i++) {
+                    reportTypeRadios[i].checked = false;
+                }
+                document.getElementById('assetSelect').value = '';
+            } else {
+                alert('❌ Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Lỗi gửi báo cáo:', error);
+            alert('❌ Không thể gửi báo cáo');
+        }
+    });
+    
+    loadAssets();
+</script>
+{% endblock %}

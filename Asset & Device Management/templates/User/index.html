@@ -1,0 +1,64 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Trang chủ{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="section-title"><i class="fas fa-chart-pie"></i> Tổng quan tài sản & thiết bị</h3>
+    
+    <div class="stat-grid">
+        <div class="stat-card">
+            <h3 id="totalAssets">0</h3>
+            <p>Tổng số tài sản</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="totalDevices">0</h3>
+            <p>Tổng số thiết bị</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="myAssets">0</h3>
+            <p> Tài sản tôi đang dùng</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="myDevices">0</h3>
+            <p> Thiết bị tôi đang dùng</p>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; background: #f8fafd; border-radius: 20px; padding: 20px;">
+            <h4> Tài sản nổi bật</h4>
+            <ul id="recentAssets" style="margin-top: 15px; list-style: none;"></ul>
+        </div>
+        <div style="flex: 1; background: #f8fafd; border-radius: 20px; padding: 20px;">
+            <h4> Thiết bị nổi bật</h4>
+            <ul id="recentDevices" style="margin-top: 15px; list-style: none;"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadStats() {
+        try {
+            const assetsRes = await fetch('/api/assets');
+            const assets = await assetsRes.json();
+            const devicesRes = await fetch('/api/devices');
+            const devices = await devicesRes.json();
+            
+            document.getElementById('totalAssets').innerText = assets.length;
+            document.getElementById('totalDevices').innerText = devices.length;
+            document.getElementById('myAssets').innerText = assets.filter(a => a.assignedTo.includes('{{ user_name }}') || a.assignedTo.includes('{{ department }}')).length;
+            document.getElementById('myDevices').innerText = devices.filter(d => d.assignedTo.includes('{{ user_name }}')).length;
+            
+            const recentAssetsList = document.getElementById('recentAssets');
+            recentAssetsList.innerHTML = assets.slice(0, 5).map(a => `<li style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${a.name} - <span class="status-badge"> ${a.status}</span></li>`).join('');
+            
+            const recentDevicesList = document.getElementById('recentDevices');
+            recentDevicesList.innerHTML = devices.slice(0, 5).map(d => `<li style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"> ${d.name} - <span class="status-badge"> ${d.status}</span></li>`).join('');
+        } catch (error) {
+            console.error('Lỗi:', error);
+        }
+    }
+    loadStats();
+</script>
+{% endblock %}

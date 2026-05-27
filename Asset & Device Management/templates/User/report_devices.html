@@ -1,0 +1,132 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Báo cáo thiết bị{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="section-title" style="margin-bottom: 20px;"> Báo cáo tình trạng thiết bị</h3>
+    
+    <form id="reportForm">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Chọn thiết bị:</label>
+            <select id="deviceSelect" style="width: 100%; padding: 12px; border-radius: 16px; border: 1px solid #ccc;" required>
+                <option value="">-- Chọn thiết bị --</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Loại báo cáo:</label>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <label><input type="radio" name="reportType" value="broken" required> Báo hỏng cần sửa</label>
+                <label><input type="radio" name="reportType" value="maintenance"> Cần bảo trì</label>
+                <label><input type="radio" name="reportType" value="tech_support"> Yêu cầu hỗ trợ kỹ thuật</label>
+                <label><input type="radio" name="reportType" value="error"> Báo lỗi thiết bị</label>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Mô tả chi tiết:</label>
+            <textarea id="description" rows="4" style="width: 100%; padding: 12px; border-radius: 16px; border: 1px solid #ccc;" placeholder="Mô tả lỗi / tình trạng thiết bị..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" class="btn-primary"> Gửi báo cáo</button>
+            <a href="/user/devices" class="btn-sm" style="text-decoration: none;">Quay lại</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Khai báo biến toàn cục
+    var currentUserId = null;
+    var currentUserName = null;
+    
+    // Gán giá trị từ Flask
+    currentUserId = parseInt('{{ user_id }}');
+    currentUserName = '{{ user_name }}';
+
+    async function loadDevices() {
+        try {
+            const response = await fetch('/api/devices');
+            const devices = await response.json();
+            const select = document.getElementById('deviceSelect');
+            select.innerHTML = '<option value="">-- Chọn thiết bị --</option>';
+            for (let i = 0; i < devices.length; i++) {
+                const device = devices[i];
+                const option = document.createElement('option');
+                option.value = device.id + '|' + device.name;
+                option.textContent = device.code + ' - ' + device.name + ' (' + device.status + ')';
+                select.appendChild(option);
+            }
+        } catch (error) {
+            console.error('Lỗi tải thiết bị:', error);
+            alert('Không thể tải danh sách thiết bị');
+        }
+    }
+
+    document.getElementById('reportForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const selected = document.getElementById('deviceSelect').value;
+        if (!selected) {
+            alert('Vui lòng chọn thiết bị');
+            return;
+        }
+        
+        const parts = selected.split('|');
+        const deviceId = parts[0];
+        const deviceName = parts[1];
+        
+        const reportTypeRadios = document.querySelectorAll('input[name="reportType"]');
+        let reportType = null;
+        for (let i = 0; i < reportTypeRadios.length; i++) {
+            if (reportTypeRadios[i].checked) {
+                reportType = reportTypeRadios[i].value;
+                break;
+            }
+        }
+        
+        if (!reportType) {
+            alert('Vui lòng chọn loại báo cáo');
+            return;
+        }
+        
+        const description = document.getElementById('description').value.trim();
+        if (!description) {
+            alert('Vui lòng nhập mô tả');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/send-report-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: currentUserId,
+                    user_name: currentUserName,
+                    device_id: deviceId,
+                    device_name: deviceName,
+                    report_type: reportType,
+                    description: description
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ Báo cáo đã được gửi thành công!');
+                document.getElementById('description').value = '';
+                for (let i = 0; i < reportTypeRadios.length; i++) {
+                    reportTypeRadios[i].checked = false;
+                }
+                document.getElementById('deviceSelect').value = '';
+            } else {
+                alert('❌ Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Lỗi gửi báo cáo:', error);
+            alert('❌ Không thể gửi báo cáo');
+        }
+    });
+    
+    loadDevices();
+</script>
+{% endblock %}

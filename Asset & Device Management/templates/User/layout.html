@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>{% block title %}Asset & Device Management - Nhân viên{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .user-header {
+            background: white;
+            padding: 0 32px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-bottom: 1px solid #e9edf2;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-area {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .logo-area h2 {
+            color: #1e6f5c;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+        .logo-area span {
+            font-size: 12px;
+            color: #5e6f8d;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-name {
+            font-weight: 500;
+            color: #1e2a3a;
+            background: #eef2fa;
+            padding: 6px 16px;
+            border-radius: 30px;
+        }
+        .logout-btn {
+            background: none;
+            border: 1px solid #cfdfe9;
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .logout-btn:hover {
+            background: #fee2e2;
+        }
+        .nav-menu {
+            background: white;
+            padding: 0 32px;
+            border-bottom: 1px solid #e9edf2;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5e6f8d;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .nav-item:hover {
+            color: #1e6f5c;
+        }
+        .nav-item.active {
+            color: #1e6f5c;
+            border-bottom-color: #1e6f5c;
+        }
+        .user-main {
+            flex: 1;
+            padding: 28px 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .user-footer {
+            background: white;
+            text-align: center;
+            padding: 18px;
+            font-size: 13px;
+            color: #6c7a8e;
+            border-top: 1px solid #e2e8f0;
+            margin-top: auto;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            border: 1px solid #edf2f7;
+        }
+        .search-input {
+            padding: 10px 18px;
+            border-radius: 40px;
+            border: 1px solid #cfdfe9;
+            width: 280px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-input:focus {
+            border-color: #1e6f5c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #eef2f5;
+        }
+        th {
+            background: #f8fafd;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        tr:hover {
+            background: #fafcfd;
+        }
+        .status-badge {
+            background: #e0f2e9;
+            color: #1e6f5c;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .status-badge.warning {
+            background: #fff3e0;
+            color: #cc7b00;
+        }
+        .status-badge.pending {
+            background: #fff8e1;
+            color: #f9a825;
+        }
+        .status-badge.approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-badge.rejected {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .btn-sm {
+            background: #eef2fa;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .btn-sm:hover {
+            background: #e2e8f0;
+        }
+        .btn-primary {
+            background: #1e6f5c;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary:hover {
+            background: #0e5a49;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 0;
+            color: #1e2a3a;
+        }
+        .stat-grid {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px 24px;
+            flex: 1;
+            text-align: center;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .stat-card h3 {
+            font-size: 28px;
+            color: #1e6f5c;
+        }
+        .stat-card p {
+            color: #5e6f8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="user-header">
+        <div class="logo-area">
+            <h2>Asset & Device Management</h2>
+            <span>Nhân viên</span>
+        </div>
+        <div class="user-info">
+            <span class="user-name"> {{ user_name }} - {{ department }}</span>
+            <button class="logout-btn" onclick="window.location.href='/logout'">Đăng xuất</button>
+        </div>
+    </header>
+
+    <nav class="nav-menu">
+        <a href="/" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">Trang chủ</a>
+        <a href="/user/assets" class="nav-item {% if request.endpoint == 'assets' %}active{% endif %}">Tài sản</a>
+        <a href="/user/devices" class="nav-item {% if request.endpoint == 'devices' %}active{% endif %}">Thiết bị</a>
+        <a href="/user/borrow" class="nav-item {% if request.endpoint == 'borrow' %}active{% endif %}">Yêu cầu mượn</a>
+        <a href="/user/track" class="nav-item {% if request.endpoint == 'track_reports' %}active{% endif %}">Theo dõi báo cáo và Yêu cầu</a>
+    </nav>
+
+    <main class="user-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="user-footer">
+        © 2026 Asset & Device Management - Hệ thống quản lý tài sản & thiết bị
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,318 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Yêu cầu mượn tài sản{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="section-title" style="margin-bottom: 20px;">Yêu cầu mượn tài sản</h3>
+    
+    <!-- Nút chuyển đổi -->
+    <div style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid #e9edf2; padding-bottom: 10px;">
+        <button id="btnMyAssets" class="tab-btn active" style="background: #1e6f5c; color: white; border: none; padding: 10px 24px; border-radius: 30px; cursor: pointer;"> Tài sản đang sử dụng</button>
+        <button id="BtnAvailableAssets" class="tab-btn" style="background: #eef2fa; color: #1e2a3a; border: none; padding: 10px 24px; border-radius: 30px; cursor: pointer;"> Tài sản chưa sử dụng</button>
+    </div>
+
+    <!-- Panel 1: Tài sản đang sử dụng -->
+    <div id="myAssetsPanel">
+        <div style="background: #f8fafd; border-radius: 20px; padding: 20px;">
+            <h4> Danh sách tài sản bạn đang sử dụng</h4>
+            <p style="font-size: 13px; color: #5e6f8d; margin-bottom: 15px;">Các tài sản đã được phân bổ cho bạn hoặc phòng ban của bạn</p>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr style="background: #eef2fa;">
+                            <th>Mã tài sản</th>
+                            <th>Tên tài sản</th>
+                            <th>Loại</th>
+                            <th>Trạng thái</th>
+                            <th>Người sử dụng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myAssetsTable">
+                        <tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Tài sản chưa sử dụng (ẩn mặc định) -->
+    <div id="availableAssetsPanel" style="display: none;">
+        <div style="background: #f8fafd; border-radius: 20px; padding: 20px;">
+            <h4> Danh sách tài sản chưa sử dụng</h4>
+            <p style="font-size: 13px; color: #5e6f8d; margin-bottom: 15px;">Các tài sản hiện đang trống, bạn có thể yêu cầu mượn</p>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr style="background: #eef2fa;">
+                            <th>Mã tài sản</th>
+                            <th>Tên tài sản</th>
+                            <th>Loại</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="availableAssetsTable">
+                        <tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal yêu cầu mượn -->
+<div id="borrowModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: white; border-radius: 28px; padding: 28px; width: 500px; max-width: 90%;">
+        <h3> Yêu cầu mượn tài sản</h3>
+        <p id="selectedAssetInfo" style="margin: 15px 0; padding: 10px; background: #eef2fa; border-radius: 12px;"></p>
+        <input type="hidden" id="selectedAssetId">
+        <input type="hidden" id="selectedAssetName">
+        
+        <div style="margin-bottom: 15px;">
+            <label>Lý do mượn:</label>
+            <textarea id="borrowReason" rows="3" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ccc;" placeholder="Nêu rõ lý do cần mượn..."></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label>Ngày mượn dự kiến:</label>
+                <input type="date" id="borrowDate" style="width: 100%; padding: 8px; border-radius: 12px; border: 1px solid #ccc;">
+            </div>
+            <div style="flex: 1;">
+                <label>Ngày trả dự kiến:</label>
+                <input type="date" id="returnDate" style="width: 100%; padding: 8px; border-radius: 12px; border: 1px solid #ccc;">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="closeModalBtn" class="btn-sm">Hủy</button>
+            <button id="submitBorrowBtn" class="btn-primary">Gửi yêu cầu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Khai báo biến
+    var currentUserId = null;
+    var currentUserName = null;
+    var currentDepartment = null;
+    
+    // Gán giá trị từ Flask
+    currentUserId = parseInt('{{ user_id }}');
+    currentUserName = '{{ user_name }}';
+    currentDepartment = '{{ department }}';
+    
+    var allAssets = [];
+    var availableAssets = [];
+
+    // Chuyển tab
+    var btnMyAssets = document.getElementById('btnMyAssets');
+    var btnAvailableAssets = document.getElementById('BtnAvailableAssets');
+    var myPanel = document.getElementById('myAssetsPanel');
+    var availablePanel = document.getElementById('availableAssetsPanel');
+
+    function showMyAssets() {
+        btnMyAssets.style.background = '#1e6f5c';
+        btnMyAssets.style.color = 'white';
+        btnAvailableAssets.style.background = '#eef2fa';
+        btnAvailableAssets.style.color = '#1e2a3a';
+        myPanel.style.display = 'block';
+        availablePanel.style.display = 'none';
+        loadMyAssets();
+    }
+
+    function showAvailableAssets() {
+        btnAvailableAssets.style.background = '#1e6f5c';
+        btnAvailableAssets.style.color = 'white';
+        btnMyAssets.style.background = '#eef2fa';
+        btnMyAssets.style.color = '#1e2a3a';
+        myPanel.style.display = 'none';
+        availablePanel.style.display = 'block';
+        loadAvailableAssets();
+    }
+
+    btnMyAssets.onclick = showMyAssets;
+    btnAvailableAssets.onclick = showAvailableAssets;
+
+    // Load tài sản đang sử dụng của user
+    async function loadMyAssets() {
+        try {
+            var response = await fetch('/api/assets');
+            allAssets = await response.json();
+            
+            // Lọc tài sản đang được gán cho user này
+            var myAssets = [];
+            for (var i = 0; i < allAssets.length; i++) {
+                var a = allAssets[i];
+                if (a.assignedTo.indexOf(currentUserName) !== -1 || a.assignedTo.indexOf(currentDepartment) !== -1) {
+                    myAssets.push(a);
+                }
+            }
+            
+            var tbody = document.getElementById('myAssetsTable');
+            if (myAssets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">📭 Bạn chưa được phân bổ tài sản nào</td></tr>';
+            } else {
+                var html = '';
+                for (var i = 0; i < myAssets.length; i++) {
+                    var asset = myAssets[i];
+                    var statusClass = (asset.status === 'Đang sử dụng') ? 'status-badge' : 'status-badge warning';
+                    html += '<tr>';
+                    html += '<td>' + asset.code + '</td>';
+                    html += '<td>' + asset.name + '</strong></td>';
+                    html += '<td>' + asset.type + '</td>';
+                    html += '<td><span class="' + statusClass + '">' + asset.status + '</span></td>';
+                    html += '<td>' + asset.assignedTo + '</td>';
+                    html += '</tr>';
+                }
+                tbody.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('myAssetsTable').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;"> Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    // Load tài sản chưa sử dụng
+    async function loadAvailableAssets() {
+        try {
+            var response = await fetch('/api/assets/available');
+            availableAssets = await response.json();
+            
+            var tbody = document.getElementById('availableAssetsTable');
+            if (availableAssets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">📭 Hiện không có tài sản nào trống</td></tr>';
+            } else {
+                var html = '';
+                for (var i = 0; i < availableAssets.length; i++) {
+                    var asset = availableAssets[i];
+                    html += '<tr>';
+                    html += '<td>' + asset.code + '</td>';
+                    html += '<td>' + asset.name + '</strong></td>';
+                    html += '<td>' + asset.type + '</td>';
+                    html += '<td><span class="status-badge warning">' + asset.status + '</span></td>';
+                    html += '<td><button class="borrow-btn" data-id="' + asset.id + '" data-name="' + asset.name + '"> Yêu cầu mượn</button></td>';
+                    html += '</tr>';
+                }
+                tbody.innerHTML = html;
+                
+                // Gán sự kiện cho các nút mượn
+                var borrowBtns = document.querySelectorAll('.borrow-btn');
+                for (var i = 0; i < borrowBtns.length; i++) {
+                    borrowBtns[i].onclick = function() {
+                        var id = this.getAttribute('data-id');
+                        var name = this.getAttribute('data-name');
+                        openBorrowModal(id, name);
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('availableAssetsTable').innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;"> Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    // Mở modal yêu cầu mượn
+    function openBorrowModal(assetId, assetName) {
+        document.getElementById('selectedAssetId').value = assetId;
+        document.getElementById('selectedAssetName').value = assetName;
+        document.getElementById('selectedAssetInfo').innerHTML = ' <strong>' + assetName + '</strong>';
+        document.getElementById('borrowModal').style.display = 'flex';
+    }
+
+    // Đóng modal
+    function closeModal() {
+        document.getElementById('borrowModal').style.display = 'none';
+        document.getElementById('borrowReason').value = '';
+        document.getElementById('borrowDate').value = '';
+        document.getElementById('returnDate').value = '';
+    }
+
+    // Gửi yêu cầu mượn
+    async function submitBorrowRequest() {
+        var assetId = document.getElementById('selectedAssetId').value;
+        var assetName = document.getElementById('selectedAssetName').value;
+        var reason = document.getElementById('borrowReason').value;
+        var borrowDate = document.getElementById('borrowDate').value;
+        var returnDate = document.getElementById('returnDate').value;
+        
+        if (!reason) {
+            alert('Vui lòng nhập lý do mượn');
+            return;
+        }
+        
+        try {
+            var response = await fetch('/api/send-borrow-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: currentUserId,
+                    user_name: currentUserName,
+                    department: currentDepartment,
+                    asset_id: assetId,
+                    asset_name: assetName,
+                    reason: reason,
+                    borrow_date: borrowDate,
+                    return_date: returnDate
+                })
+            });
+            
+            var result = await response.json();
+            if (result.success) {
+                alert(' Yêu cầu mượn đã được gửi!');
+                closeModal();
+                // Reload lại danh sách tài sản chưa sử dụng
+                loadAvailableAssets();
+            } else {
+                alert(' Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Lỗi gửi yêu cầu:', error);
+            alert(' Không thể gửi yêu cầu');
+        }
+    }
+
+    // Gán sự kiện
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('submitBorrowBtn').onclick = submitBorrowRequest;
+    
+    // Đóng modal khi click ra ngoài
+    window.onclick = function(event) {
+        var modal = document.getElementById('borrowModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    };
+    
+    // Load mặc định: hiển thị tài sản đang sử dụng
+    loadMyAssets();
+</script>
+
+<style>
+    .borrow-btn {
+        background: #1e6f5c;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+    }
+    .borrow-btn:hover {
+        background: #0e5a49;
+        transform: scale(1.02);
+    }
+    .status-badge.warning {
+        background: #fff3e0;
+        color: #cc7b00;
+    }
+    .tab-btn {
+        transition: 0.2s;
+    }
+    .tab-btn:hover {
+        opacity: 0.85;
+    }
+</style>
+{% endblock %}

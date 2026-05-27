@@ -1,0 +1,230 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Theo dõi trạng thái{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="section-title" style="margin-bottom: 20px;"> Theo dõi trạng thái</h3>
+    
+    <!-- Tab chuyển đổi -->
+    <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #e9edf2; padding-bottom: 10px;">
+        <button id="tabReports" class="tab-btn active" style="background: none; border: none; padding: 8px 20px; cursor: pointer; font-size: 14px; border-radius: 30px;"> Báo cáo của tôi</button>
+        <button id="tabBorrow" class="tab-btn" style="background: none; border: none; padding: 8px 20px; cursor: pointer; font-size: 14px; border-radius: 30px;"> Yêu cầu mượn của tôi</button>
+    </div>
+
+    <!-- Panel báo cáo -->
+    <div id="reportsPanel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4>Danh sách báo cáo đã gửi</h4>
+            <button id="refreshReportsBtn" class="btn-sm"><i class="fas fa-sync-alt"></i> Tải lại</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f8fafd;">
+                        <th>Mã</th>
+                        <th>Loại</th>
+                        <th>Nội dung</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian gửi</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsTableBody">
+                    <tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Panel yêu cầu mượn -->
+    <div id="borrowPanel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4>Danh sách yêu cầu mượn</h4>
+            <button id="refreshBorrowBtn" class="btn-sm"><i class="fas fa-sync-alt"></i> Tải lại</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f8fafd;">
+                        <th>Mã</th>
+                        <th>Tài sản</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian gửi</th>
+                        <th>Thời gian bàn giao</th>
+                    </tr>
+                </thead>
+                <tbody id="borrowTableBody">
+                    <tr><td colspan="6" style="text-align: center;">Đang tải...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Khai báo biến
+    var currentUserId = null;
+    currentUserId = parseInt('{{ user_id }}');
+
+    // DOM elements
+    var tabReports = document.getElementById('tabReports');
+    var tabBorrow = document.getElementById('tabBorrow');
+    var reportsPanel = document.getElementById('reportsPanel');
+    var borrowPanel = document.getElementById('borrowPanel');
+    var refreshReportsBtn = document.getElementById('refreshReportsBtn');
+    var refreshBorrowBtn = document.getElementById('refreshBorrowBtn');
+    var reportsTableBody = document.getElementById('reportsTableBody');
+    var borrowTableBody = document.getElementById('borrowTableBody');
+
+    // Chuyển tab
+    function switchToReports() {
+        tabReports.classList.add('active');
+        tabBorrow.classList.remove('active');
+        reportsPanel.style.display = 'block';
+        borrowPanel.style.display = 'none';
+        loadReports();
+    }
+
+    function switchToBorrow() {
+        tabBorrow.classList.add('active');
+        tabReports.classList.remove('active');
+        reportsPanel.style.display = 'none';
+        borrowPanel.style.display = 'block';
+        loadBorrowRequests();
+    }
+
+    tabReports.onclick = switchToReports;
+    tabBorrow.onclick = switchToBorrow;
+
+    // Load báo cáo
+    async function loadReports() {
+        try {
+            var response = await fetch('/api/my-reports?user_id=' + currentUserId);
+            var reports = await response.json();
+            
+            if (reports.length === 0) {
+                reportsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;"> Chưa có báo cáo nào</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < reports.length; i++) {
+                var r = reports[i];
+                var statusClass = '';
+                var statusText = r.status;
+                
+                if (r.status === 'Chờ xử lý') {
+                    statusClass = 'pending';
+                    statusText = ' Chờ xử lý';
+                } else if (r.status === 'Đã xử lý') {
+                    statusClass = 'approved';
+                    statusText = ' Đã xử lý';
+                } else if (r.status === 'Chờ xét duyệt') {
+                    statusClass = 'pending';
+                    statusText = 'Chờ xét duyệt';
+                } else if (r.status === 'Đã duyệt') {
+                    statusClass = 'approved';
+                    statusText = ' Đã duyệt';
+                } else if (r.status === 'Từ chối') {
+                    statusClass = 'rejected';
+                    statusText = ' Bị từ chối';
+                }
+                
+                var shortContent = r.content;
+                if (shortContent.length > 80) {
+                    shortContent = shortContent.substring(0, 80) + '...';
+                }
+                
+                html += '<tr>';
+                html += '<td>#' + r.id + '</td>';
+                html += '<td>' + r.type + '</td>';
+                html += '<td><small title="' + r.content.replace(/"/g, '&quot;') + '">' + shortContent + '</small></td>';
+                html += '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
+                html += '<td>' + r.createdAt + '</td>';
+                html += '</tr>';
+            }
+            reportsTableBody.innerHTML = html;
+        } catch (error) {
+            console.error('Lỗi tải báo cáo:', error);
+            reportsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">❌ Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    // Load yêu cầu mượn
+    async function loadBorrowRequests() {
+        try {
+            var response = await fetch('/api/my-borrow-requests?user_id=' + currentUserId);
+            var requests = await response.json();
+            
+            if (requests.length === 0) {
+                borrowTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Chưa có yêu cầu mượn nào</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < requests.length; i++) {
+                var r = requests[i];
+                var statusClass = '';
+                var statusText = r.status;
+                var handoverText = r.expected_handover || '---';
+                
+                if (r.status === 'Chờ xét duyệt') {
+                    statusClass = 'pending';
+                    statusText = ' Đang xét duyệt';
+                } else if (r.status === 'Đã duyệt') {
+                    statusClass = 'approved';
+                    statusText = ' Đã duyệt';
+                } else if (r.status === 'Từ chối') {
+                    statusClass = 'rejected';
+                    statusText = ' Bị từ chối';
+                }
+                
+                var shortContent = r.content;
+                if (shortContent.length > 60) {
+                    shortContent = shortContent.substring(0, 60) + '...';
+                }
+                
+                html += '<tr>';
+                html += '<td>#' + r.id + '</td>';
+                html += '<td><strong>' + r.asset_name + '</strong></td>';
+                html += '<td><small title="' + r.content.replace(/"/g, '&quot;') + '">' + shortContent + '</small></td>';
+                html += '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
+                html += '<td>' + r.createdAt + '</td>';
+                html += '<td>' + handoverText + '</td>';
+                html += '</tr>';
+            }
+            borrowTableBody.innerHTML = html;
+        } catch (error) {
+            console.error('Lỗi tải yêu cầu mượn:', error);
+            borrowTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;"> Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    // Nút refresh
+    refreshReportsBtn.onclick = loadReports;
+    refreshBorrowBtn.onclick = loadBorrowRequests;
+    
+    // Load mặc định
+    loadReports();
+</script>
+
+<style>
+    .tab-btn.active {
+        background: #1e6f5c !important;
+        color: white !important;
+    }
+    .status-badge.pending {
+        background: #fff8e1;
+        color: #f9a825;
+    }
+    .status-badge.approved {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .status-badge.rejected {
+        background: #ffebee;
+        color: #c62828;
+    }
+</style>
+{% endblock %}
