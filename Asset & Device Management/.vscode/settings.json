@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "pytest.ini": "ini"
+    },
+    "python.analysis.ignore": [
+        "pytest.ini"
+    ]
+}
