@@ -1,0 +1,99 @@
+{% extends "User/layout.html" %}
+
+{% block title %}Asset & Device Management - Danh sách thiết bị{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="filter-bar">
+        <h3 class="section-title"> Thiết bị của {{ user_name }}</h3>
+        <div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm thiết bị...">
+            <button class="btn-sm" id="refreshBtn"><i class="fas fa-sync-alt"></i> Tải lại</button>
+            <a href="/user/report-devices" class="btn-primary" style="text-decoration: none; display: inline-block;"> Báo cáo thiết bị</a>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th> Mã</th>
+                    <th> Tên thiết bị</th>
+                    <th> Loại</th>
+                    <th> Trạng thái</th>
+                    <th> Người sử dụng</th>
+                    <th> Ngày bàn giao</th>
+                </tr>
+            </thead>
+            <tbody id="deviceTableBody">
+                <tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-pulse"></i> Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var currentUser = "{{ user_name }}";
+
+    async function loadDevices() {
+        try {
+            const response = await fetch('/api/devices/in-use');
+            var allDevices = await response.json();
+            var filteredDevices = allDevices.filter(function(device) {
+                return device.assignedTo === currentUser;
+            });
+            renderTable(filteredDevices);
+        } catch (error) {
+            console.error('Lỗi:', error);
+            document.getElementById('deviceTableBody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;"><i class="fas fa-exclamation-triangle"></i> Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    function renderTable(devices, filterText = "") {
+        var filtered = devices;
+        if (filterText) {
+            filtered = filtered.filter(function(d) {
+                return d.name.toLowerCase().includes(filterText.toLowerCase()) || 
+                       d.code.toLowerCase().includes(filterText.toLowerCase());
+            });
+        }
+        var tbody = document.getElementById('deviceTableBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"> Không có thiết bị nào của ' + currentUser + '</td></tr>';
+        } else {
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var d = filtered[i];
+                html += '<tr>';
+                html += '<td>' + d.code + '</td>';
+                html += '<td>' + d.name + '</strong></td>';
+                html += '<td>' + d.type + '</td>';
+                html += '<td><span class="status-badge">' + d.status + '</span></td>';
+                html += '<td>' + d.assignedTo + '</td>';
+                html += '<td>' + d.assignedDate + '</td>';
+                html += '</tr>';
+            }
+            tbody.innerHTML = html;
+        }
+    }
+
+    var currentDevices = [];
+    async function loadAndStore() {
+        const response = await fetch('/api/devices/in-use');
+        var allDevices = await response.json();
+        currentDevices = allDevices.filter(function(device) {
+            return device.assignedTo === currentUser;
+        });
+        renderTable(currentDevices);
+    }
+    
+    document.getElementById('searchInput').addEventListener('keyup', function(e) {
+        renderTable(currentDevices, e.target.value);
+    });
+    document.getElementById('refreshBtn').onclick = function() {
+        document.getElementById('searchInput').value = '';
+        loadAndStore();
+    };
+    loadAndStore();
+</script>
+{% endblock %}
