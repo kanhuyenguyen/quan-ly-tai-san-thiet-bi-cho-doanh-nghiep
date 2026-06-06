@@ -4,10 +4,10 @@
 - Hệ thống Quản lý Tài sản và Thiết bị được xây dựng nhằm hỗ trợ doanh nghiệp quản lý tài sản, thiết bị và quá trình sử dụng tài sản của nhân viên một cách hiệu quả.
 - Hệ thống cho phép:
     * Quản lý thông tin tài sản và thiết bị.
-    * Theo dõi tình trạng sử dụng tài sản.
+    * Theo dõi tình trạng sử dụng tài sản và thiết bị.
     * Quản lý yêu cầu mượn tài sản từ nhân viên.
-    * Quản lý báo cáo sự cố thiết bị.
-    * Theo dõi xử lý báo cáo, yêu cầu của nhân viên.
+    * Quản lý báo cáo sự cố thiết bịtừ nhân viên.
+    * Theo dõi xử lý báo cáo, yêu cầu.
     * Phân quyền người dùng theo vai trò Admin và Employee.
 
 ## Công nghệ sử dụng
