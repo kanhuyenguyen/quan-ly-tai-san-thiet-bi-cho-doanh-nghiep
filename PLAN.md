@@ -65,7 +65,7 @@ Hệ thống cho phép người dùng:
 - Hỗ trợ bố cục tài liệu
 - Hỗ trợ xây dựng Use Case
 - Hỗ trợ mô tả chức năng hệ thống
-### Tuần 2: Thiết kế & lập trình hệ thống
+### Tuần 2+3: Thiết kế & lập trình hệ thống
 #### Nội dung cần thực hiện:
 - Bổ sung + hoàn thiện phần database
 - Kết nối SQL Server với Python
@@ -83,7 +83,7 @@ Hệ thống cho phép người dùng:
 - Gợi ý tối ưu giao diện và xử lý dữ liệu
 - Hỗ trợ viết code 
 - Hỗ trợ sửa lỗi
-### Tuần 3: Kiểm thử & hoàn thiện hệ thống
+### Tuần 4+5: Kiểm thử & hoàn thiện hệ thống
 #### Nội dung cần thực hiện:
 - Kiểm tra các chức năng hệ thống
 - Kiểm tra phân 
